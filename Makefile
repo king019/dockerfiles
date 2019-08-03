@@ -19,19 +19,18 @@ ${DOCKERFILES_DIR}/$1/Dockerfile.$2: ${DOCKERFILES_DIR}/$1/template.Dockerfile
 $1/$2: _crossbuild ${DOCKERFILES_DIR}/$1/Dockerfile.$2
 	if [ -z "${BUILD_NUMBER}" ]; then \
 		echo "BUILD_NUMBER not set"; \
-		/bin/false; \
+		exit 1; \
 	fi
 	if [ -f ${DOCKERFILES_DIR}/$1/Dockerfile.$2 ]; then \
-		docker build -t ${DOCKER_USERNAME}/$1:$2-build${BUILD_NUMBER} -f ${DOCKERFILES_DIR}/$1/Dockerfile.$2 ${DOCKERFILES_DIR}/$1; \
+		docker build -t ${DOCKER_USERNAME}/$1:$2-build${BUILD_NUMBER} -f ${DOCKERFILES_DIR}/$1/Dockerfile.$2 ${DOCKERFILES_DIR}/$1 || exit 1; \
 		[ -n "${JENKINS_HOME}" ] && docker push ${DOCKER_USERNAME}/$1:$2-build${BUILD_NUMBER} || /bin/true; \
-		docker tag ${DOCKER_USERNAME}/$1:$2-build${BUILD_NUMBER} ${DOCKER_USERNAME}/$1:$2; \
+		docker tag ${DOCKER_USERNAME}/$1:$2-build${BUILD_NUMBER} ${DOCKER_USERNAME}/$1:$2 || exit 1; \
 		[ -n "${JENKINS_HOME}" ] && docker push ${DOCKER_USERNAME}/$1:$2 || /bin/true; \
-		/bin/true; \
 	else \
 		echo "Dockerfile generation failed, see error above"; \
 		if [ -n "${JENKINS_HOME}" ]; then \
 			echo "Running in Jenkins CI, failing the build"; \
-			/bin/false; \
+			exit 1; \
 		fi \
 	fi
 
@@ -43,9 +42,9 @@ $1:$(foreach arch,latest ${ARCHITECTURES},$1/${arch})
 
 # Target for latest image, mapping to amd64
 $1/latest: $1/amd64
-	docker tag ${DOCKER_USERNAME}/$1:amd64-build${BUILD_NUMBER} ${DOCKER_USERNAME}/$1:build${BUILD_NUMBER}
+	docker tag ${DOCKER_USERNAME}/$1:amd64-build${BUILD_NUMBER} ${DOCKER_USERNAME}/$1:build${BUILD_NUMBER} || exit 1
 	[ -n "${JENKINS_HOME}" ] && docker push ${DOCKER_USERNAME}/$1:build${BUILD_NUMBER} || /bin/true
-	docker tag ${DOCKER_USERNAME}/$1:amd64-build${BUILD_NUMBER} ${DOCKER_USERNAME}/$1:latest
+	docker tag ${DOCKER_USERNAME}/$1:amd64-build${BUILD_NUMBER} ${DOCKER_USERNAME}/$1:latest || exit 1
 	[ -n "${JENKINS_HOME}" ] && docker push ${DOCKER_USERNAME}/$1:latest || /bin/true
 
 $(foreach arch,${ARCHITECTURES},$(eval $(call create-image-arch-target,$1,$(arch))))
