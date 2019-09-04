@@ -21,6 +21,6 @@ RUN PKG_INSTALL(APP_DEPS APP_BUILD_TOOLS) \
     && make && make install \
     && rm -rf /usr/share/man \
     && rm -rf /tmp/* \
-    && strip /usr/bin/bird* \
+    && strip /usr/sbin/bird* \
     && PKG_UNINSTALL(APP_BUILD_TOOLS)
 ENTRYPOINT ["/sbin/tini", "-g", "--", "/start.sh"]
