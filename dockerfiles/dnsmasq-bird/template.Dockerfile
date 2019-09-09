@@ -2,7 +2,7 @@
 #include "image/alpine_edge.Dockerfile"
 #include "env.Dockerfile"
 
-#define APP_DEPS tini
+#define APP_DEPS tini dnsmasq
 #define APP_BUILD_TOOLS build-base bison flex ncurses-dev readline-dev linux-headers wget patch binutils
 
 ENV BIRD_VERSION=2.0.5
