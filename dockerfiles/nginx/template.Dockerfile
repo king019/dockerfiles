@@ -24,7 +24,7 @@ RUN PKG_INSTALL(APP_DEPS APP_BUILD_TOOLS) \
     && wget -q https://www.openssl.org/source/openssl-${OPENSSL_VERSION}.tar.gz \
       && tar xf openssl-${OPENSSL_VERSION}.tar.gz \
       && cd /tmp/openssl-${OPENSSL_VERSION} \
-      && PATCH(https://github.com/hakasenyang/openssl-patch/raw/master/openssl-equal-1.1.1d_ciphers.patch) \
+      && PATCH(https://github.com/hakasenyang/openssl-patch/raw/master/openssl-equal-1.1.1d.patch) \
       && PATCH(https://github.com/hakasenyang/openssl-patch/raw/master/openssl-1.1.1d-chacha_draft.patch) \
       && cd /tmp \
     && git clone https://github.com/openresty/headers-more-nginx-module.git \
