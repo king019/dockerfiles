@@ -24,4 +24,4 @@ RUN PKG_INSTALL(APP_DEPS APP_BUILD_TOOLS) \
     && PKG_UNINSTALL(APP_BUILD_TOOLS)
 ADD bird.conf /etc/bird.conf
 ADD bird-static.conf /etc/bird-static.conf
-ENTRYPOINT ["/sbin/tini", "-g", "--", "/start.sh"]
+ENTRYPOINT ["/usr/bin/tini", "-g", "--", "/start.sh"]

@@ -3,7 +3,7 @@ FROM amd64/debian:buster
 #define LINUX_HEADERS linux-headers-amd64
 #elif defined(ARCH_I386)
 FROM i386/debian:buster
-#define LINUX_HEADERS linux-headers-i386
+#define LINUX_HEADERS linux-headers-686
 #elif defined(ARCH_ARM32V7)
 FROM arm32v7/debian:buster
 #define LINUX_HEADERS linux-headers-armmp
