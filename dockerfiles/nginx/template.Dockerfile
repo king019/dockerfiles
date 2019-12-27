@@ -2,7 +2,7 @@
 #include "image/debian_buster.Dockerfile"
 #include "env.Dockerfile"
 
-#if defined(ARCH_RISCV)
+#if defined(ARCH_RISCV64)
 #define APP_DEPS libpcre3 zlib1g libgd3 util-linux binutils
 #else
 #define APP_DEPS libpcre3 zlib1g libatomic-ops-dev libgd3 util-linux binutils
@@ -53,7 +53,7 @@ RUN PKG_INSTALL(APP_DEPS APP_BUILD_TOOLS) \
        --with-http_sub_module \
        --with-http_v2_module \
        --with-http_v2_hpack_enc \
-#if !defined(ARCH_RISCV)
+#if !defined(ARCH_RISCV64)
        --with-libatomic \
 #endif
 #if defined(ARCH_AMD64) || defined(ARCH_ARM64V8)
