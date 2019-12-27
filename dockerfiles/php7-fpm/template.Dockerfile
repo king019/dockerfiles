@@ -2,8 +2,8 @@
 #include "image/debian_buster.Dockerfile"
 #include "env.Dockerfile"
 
-#define APP_DEPS libmaxminddb0
-#define APP_BUILD_TOOLS build-essential autoconf automake git libmaxminddb-dev sed
+#define APP_DEPS libmaxminddb0 sed
+#define APP_BUILD_TOOLS build-essential autoconf automake git libmaxminddb-dev
 
 # https://packages.sury.org/php/README.txt
 RUN mkdir /usr/log && mkdir /run/php \
