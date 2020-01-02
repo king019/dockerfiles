@@ -1,5 +1,5 @@
 diff --git a/auto/modules b/auto/modules
-index f05f6710..87afa716 100644
+index f05f6710..0e62f953 100644
 --- a/auto/modules
 +++ b/auto/modules
 @@ -120,6 +120,7 @@ if [ $HTTP = YES ]; then
@@ -18,7 +18,7 @@ index f05f6710..87afa716 100644
                        ngx_http_range_header_filter_module \
                        ngx_http_gzip_filter_module \
                        ngx_http_postpone_filter_module \
-@@ -214,6 +216,19 @@ if [ $HTTP = YES ]; then
+@@ -225,6 +227,19 @@ if [ $HTTP = YES ]; then
          . auto/module
      fi
  
@@ -35,11 +35,11 @@ index f05f6710..87afa716 100644
 +        . auto/module
 +    fi
 +
-     if [ $HTTP_V3 = YES ]; then
-         ngx_module_name=ngx_http_v3_filter_module
+     if :; then
+         ngx_module_name=ngx_http_range_header_filter_module
          ngx_module_incs=
-@@ -436,6 +451,19 @@ if [ $HTTP = YES ]; then
-         . auto/module
+@@ -458,6 +473,19 @@ if [ $HTTP = YES ]; then
+         have=NGX_HTTP_V2_HPACK_ENC . auto/have
      fi
  
 +    if [ $HTTP_SPDY = YES ]; then
@@ -55,9 +55,9 @@ index f05f6710..87afa716 100644
 +        . auto/module
 +    fi
 +
-     if [ $HTTP_V3 = YES ]; then
-         USE_QUICHE=YES
-         USE_OPENSSL=YES
+     if :; then
+         ngx_module_name=ngx_http_static_module
+         ngx_module_incs=
 diff --git a/auto/options b/auto/options
 index f2a0e565..c5958147 100644
 --- a/auto/options
@@ -87,7 +87,7 @@ index f2a0e565..c5958147 100644
    --with-http_v2_hpack_enc           enable ngx_http_v2_hpack_enc
    --with-http_v3_module              enable ngx_http_v3_module
 diff --git a/src/core/ngx_connection.h b/src/core/ngx_connection.h
-index 7df8d413..a3c236a6 100644
+index 0af3f2d8..1e9458f6 100644
 --- a/src/core/ngx_connection.h
 +++ b/src/core/ngx_connection.h
 @@ -122,6 +122,7 @@ typedef enum {
@@ -99,7 +99,7 @@ index 7df8d413..a3c236a6 100644
  
  struct ngx_connection_s {
 diff --git a/src/http/modules/ngx_http_ssl_module.c b/src/http/modules/ngx_http_ssl_module.c
-index 7733239d..9b42374d 100644
+index 7733239d..f16a6606 100644
 --- a/src/http/modules/ngx_http_ssl_module.c
 +++ b/src/http/modules/ngx_http_ssl_module.c
 @@ -406,10 +406,10 @@ ngx_http_ssl_alpn_select(ngx_ssl_conn_t *ssl_conn, const unsigned char **out,
@@ -107,60 +107,36 @@ index 7733239d..9b42374d 100644
      unsigned int            i;
  #endif
 -#if (NGX_HTTP_V2 || NGX_HTTP_V3)
-+#if (NGX_HTTP_V2 || NGX_HTTP_V3 || NGX_HTTP_SPDY)
++#if (NGX_HTTP_SPDY || NGX_HTTP_V2 || NGX_HTTP_V3)
      ngx_http_connection_t  *hc;
  #endif
 -#if (NGX_HTTP_V2 || NGX_DEBUG)
-+#if (NGX_HTTP_V2 || NGX_HTTP_SPDY || NGX_DEBUG)
++#if (NGX_HTTP_SPDY || NGX_HTTP_V2 || NGX_DEBUG)
      ngx_connection_t       *c;
  
      c = ngx_ssl_get_connection(ssl_conn);
-@@ -423,10 +423,43 @@ ngx_http_ssl_alpn_select(ngx_ssl_conn_t *ssl_conn, const unsigned char **out,
+@@ -423,10 +423,19 @@ ngx_http_ssl_alpn_select(ngx_ssl_conn_t *ssl_conn, const unsigned char **out,
      }
  #endif
  
 -#if (NGX_HTTP_V2 || NGX_HTTP_V3)
-+#if (NGX_HTTP_V2 || NGX_HTTP_V3 || NGX_HTTP_SPDY)
++#if (NGX_HTTP_SPDY || NGX_HTTP_V2 || NGX_HTTP_V3)
      hc = c->data;
  #endif
  
-+#if (NGX_HTTP_V3 && NGX_HTTP_V2 && NGX_HTTP_SPDY)
-+    if (hc->addr_conf->http2 && hc->addr_conf->spdy) {
-+        srv = (unsigned char *) QUICHE_H3_APPLICATION_PROTOCOL NGX_HTTP_V2_ALPN_ADVERTISE
-+                                NGX_SPDY_NPN_ADVERTISE NGX_HTTP_NPN_ADVERTISE;
-+        srvlen = sizeof(QUICHE_H3_APPLICATION_PROTOCOL NGX_HTTP_V2_ALPN_ADVERTISE NGX_SPDY_NPN_ADVERTISE
-+                        NGX_HTTP_NPN_ADVERTISE) - 1;
-+
-+    } else
-+#endif
-+#if (NGX_HTTP_V3 && NGX_HTTP_V2)
-+    if (hc->addr_conf->http2) {
-+        srv =
-+           (unsigned char *) QUICHE_H3_APPLICATION_PROTOCOL NGX_HTTP_V2_ALPN_ADVERTISE NGX_HTTP_NPN_ADVERTISE;
-+        srvlen = sizeof(QUICHE_H3_APPLICATION_PROTOCOL NGX_HTTP_V2_ALPN_ADVERTISE NGX_HTTP_NPN_ADVERTISE) - 1;
-+
-+    } else
-+#endif
-+#if (NGX_HTTP_V3 && NGX_HTTP_SPDY)
-+    if (hc->addr_conf->spdy) {
-+        srv = (unsigned char *) QUICHE_H3_APPLICATION_PROTOCOL NGX_SPDY_NPN_ADVERTISE NGX_HTTP_NPN_ADVERTISE;
-+        srvlen = sizeof(QUICHE_H3_APPLICATION_PROTOCOL NGX_SPDY_NPN_ADVERTISE NGX_HTTP_NPN_ADVERTISE) - 1;
-+
-+    } else
-+#endif
 +#if (NGX_HTTP_V2 && NGX_HTTP_SPDY)
 +    if (hc->addr_conf->http2 && hc->addr_conf->spdy) {
 +        srv = (unsigned char *) NGX_HTTP_V2_ALPN_ADVERTISE
 +                                NGX_SPDY_NPN_ADVERTISE NGX_HTTP_NPN_ADVERTISE;
 +        srvlen = sizeof(NGX_HTTP_V2_ALPN_ADVERTISE NGX_SPDY_NPN_ADVERTISE
 +                        NGX_HTTP_NPN_ADVERTISE) - 1;
-+
++  
 +    } else
 +#endif
  #if (NGX_HTTP_V2)
      if (hc->addr_conf->http2) {
          srv =
-@@ -435,6 +468,13 @@ ngx_http_ssl_alpn_select(ngx_ssl_conn_t *ssl_conn, const unsigned char **out,
+@@ -442,6 +451,13 @@ ngx_http_ssl_alpn_select(ngx_ssl_conn_t *ssl_conn, const unsigned char **out,
  
      } else
  #endif
@@ -171,10 +147,10 @@ index 7733239d..9b42374d 100644
 +
 +    } else
 +#endif
- #if (NGX_HTTP_V3)
-     if (hc->addr_conf->quic) {
-         srv = (unsigned char *) QUICHE_H3_APPLICATION_PROTOCOL;
-@@ -469,19 +509,32 @@ static int
+     {
+         srv = (unsigned char *) NGX_HTTP_NPN_ADVERTISE;
+         srvlen = sizeof(NGX_HTTP_NPN_ADVERTISE) - 1;
+@@ -469,19 +485,32 @@ static int
  ngx_http_ssl_npn_advertised(ngx_ssl_conn_t *ssl_conn,
      const unsigned char **out, unsigned int *outlen, void *arg)
  {
@@ -209,7 +185,7 @@ index 7733239d..9b42374d 100644
      if (hc->addr_conf->http2) {
          *out =
              (unsigned char *) NGX_HTTP_V2_NPN_ADVERTISE NGX_HTTP_NPN_ADVERTISE;
-@@ -489,6 +542,20 @@ ngx_http_ssl_npn_advertised(ngx_ssl_conn_t *ssl_conn,
+@@ -489,6 +518,20 @@ ngx_http_ssl_npn_advertised(ngx_ssl_conn_t *ssl_conn,
  
          return SSL_TLSEXT_ERR_OK;
      }
@@ -231,39 +207,39 @@ index 7733239d..9b42374d 100644
  #endif
  
 diff --git a/src/http/ngx_http.c b/src/http/ngx_http.c
-index a29bff83..3f022cd2 100644
+index a29bff83..cfe310dc 100644
 --- a/src/http/ngx_http.c
 +++ b/src/http/ngx_http.c
-@@ -1203,6 +1203,9 @@ ngx_http_add_addresses(ngx_conf_t *cf, ngx_http_core_srv_conf_t *cscf,
- #if (NGX_HTTP_V2)
-     ngx_uint_t             http2;
+@@ -1206,6 +1206,9 @@ ngx_http_add_addresses(ngx_conf_t *cf, ngx_http_core_srv_conf_t *cscf,
+ #if (NGX_HTTP_V3)
+     ngx_uint_t             quic;
  #endif
 +#if (NGX_HTTP_SPDY)
 +    ngx_uint_t             spdy;
 +#endif
+ 
+     /*
+      * we cannot compare whole sockaddr struct's as kernel
+@@ -1244,6 +1247,9 @@ ngx_http_add_addresses(ngx_conf_t *cf, ngx_http_core_srv_conf_t *cscf,
  #if (NGX_HTTP_V3)
-     ngx_uint_t             quic;
- #endif
-@@ -1241,6 +1244,9 @@ ngx_http_add_addresses(ngx_conf_t *cf, ngx_http_core_srv_conf_t *cscf,
- #if (NGX_HTTP_V2)
-         http2 = lsopt->http2 || addr[i].opt.http2;
+         quic = lsopt->quic || addr[i].opt.quic;
  #endif
 +#if (NGX_HTTP_SPDY)
 +        spdy = lsopt->spdy || addr[i].opt.spdy;
 +#endif
+ 
+         if (lsopt->set) {
+ 
+@@ -1283,6 +1289,9 @@ ngx_http_add_addresses(ngx_conf_t *cf, ngx_http_core_srv_conf_t *cscf,
  #if (NGX_HTTP_V3)
-         quic = lsopt->quic || addr[i].opt.quic;
- #endif
-@@ -1280,6 +1286,9 @@ ngx_http_add_addresses(ngx_conf_t *cf, ngx_http_core_srv_conf_t *cscf,
- #if (NGX_HTTP_V2)
-         addr[i].opt.http2 = http2;
+         addr[i].opt.quic = quic;
  #endif
 +#if (NGX_HTTP_SPDY)
 +        addr[i].opt.spdy = spdy;
 +#endif
- #if (NGX_HTTP_V3)
-         addr[i].opt.quic = quic;
- #endif
+ 
+         return NGX_OK;
+     }
 @@ -1324,6 +1333,18 @@ ngx_http_add_address(ngx_conf_t *cf, ngx_http_core_srv_conf_t *cscf,
                             &lsopt->addr_text);
      }
@@ -304,7 +280,7 @@ index a29bff83..3f022cd2 100644
          addrs6[i].conf.proxy_protocol = addr[i].opt.proxy_protocol;
  #if (NGX_HTTP_V3)
 diff --git a/src/http/ngx_http.h b/src/http/ngx_http.h
-index 444f9353..66b8bc99 100644
+index 444f9353..166f82da 100644
 --- a/src/http/ngx_http.h
 +++ b/src/http/ngx_http.h
 @@ -19,6 +19,9 @@ typedef struct ngx_http_cache_s       ngx_http_cache_t;
@@ -317,21 +293,21 @@ index 444f9353..66b8bc99 100644
  typedef struct ngx_http_v2_stream_s   ngx_http_v2_stream_t;
  typedef struct ngx_http_v3_stream_s   ngx_http_v3_stream_t;
  
-@@ -39,6 +42,9 @@ typedef u_char *(*ngx_http_log_handler_pt)(ngx_http_request_t *r,
- #if (NGX_HTTP_V2)
- #include <ngx_http_v2.h>
- #endif
+@@ -36,6 +39,9 @@ typedef u_char *(*ngx_http_log_handler_pt)(ngx_http_request_t *r,
+ #include <ngx_http_upstream_round_robin.h>
+ #include <ngx_http_core_module.h>
+ 
 +#if (NGX_HTTP_SPDY)
 +#include <ngx_http_spdy.h>
 +#endif
- #if (NGX_HTTP_V3)
- #include <ngx_http_v3.h>
+ #if (NGX_HTTP_V2)
+ #include <ngx_http_v2.h>
  #endif
 diff --git a/src/http/ngx_http_core_module.c b/src/http/ngx_http_core_module.c
-index 4dddac0e..f5379879 100644
+index af278c0d..408bf1a9 100644
 --- a/src/http/ngx_http_core_module.c
 +++ b/src/http/ngx_http_core_module.c
-@@ -1952,6 +1952,13 @@ ngx_http_gzip_ok(ngx_http_request_t *r)
+@@ -1939,6 +1939,13 @@ ngx_http_gzip_ok(ngx_http_request_t *r)
          return NGX_DECLINED;
      }
  
@@ -345,7 +321,7 @@ index 4dddac0e..f5379879 100644
      ae = r->headers_in.accept_encoding;
      if (ae == NULL) {
          return NGX_DECLINED;
-@@ -2309,6 +2316,9 @@ ngx_http_subrequest(ngx_http_request_t *r,
+@@ -2296,6 +2303,9 @@ ngx_http_subrequest(ngx_http_request_t *r,
  #if (NGX_HTTP_V2)
      sr->stream = r->stream;
  #endif
@@ -355,7 +331,7 @@ index 4dddac0e..f5379879 100644
  
      sr->method = NGX_HTTP_GET;
      sr->http_version = r->http_version;
-@@ -4018,11 +4028,15 @@ ngx_http_core_listen(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
+@@ -4001,11 +4011,15 @@ ngx_http_core_listen(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
          }
  
          if (ngx_strcmp(value[n].data, "spdy") == 0) {
@@ -376,7 +352,7 @@ index 4dddac0e..f5379879 100644
  
          if (ngx_strncmp(value[n].data, "so_keepalive=", 13) == 0) {
 diff --git a/src/http/ngx_http_core_module.h b/src/http/ngx_http_core_module.h
-index 9610dee3..5352f46c 100644
+index 88821a02..51998b6c 100644
 --- a/src/http/ngx_http_core_module.h
 +++ b/src/http/ngx_http_core_module.h
 @@ -75,6 +75,9 @@ typedef struct {
@@ -400,7 +376,7 @@ index 9610dee3..5352f46c 100644
      unsigned                   quic:1;
  };
 diff --git a/src/http/ngx_http_request.c b/src/http/ngx_http_request.c
-index 642b53cf..430c3026 100644
+index 1df32a39..99af2579 100644
 --- a/src/http/ngx_http_request.c
 +++ b/src/http/ngx_http_request.c
 @@ -328,6 +328,11 @@ ngx_http_init_connection(ngx_connection_t *c)
@@ -450,7 +426,7 @@ index 642b53cf..430c3026 100644
          c->log->action = "waiting for request";
  
          c->read->handler = ngx_http_wait_request_handler;
-@@ -2792,6 +2825,12 @@ ngx_http_finalize_connection(ngx_http_request_t *r)
+@@ -2789,6 +2822,12 @@ ngx_http_finalize_connection(ngx_http_request_t *r)
          return;
      }
  #endif
@@ -461,9 +437,9 @@ index 642b53cf..430c3026 100644
 +    }
 +#endif
  
- #if (NGX_HTTP_V3)
-     if (r->qstream) {
-@@ -3007,6 +3046,18 @@ ngx_http_test_reading(ngx_http_request_t *r)
+     clcf = ngx_http_get_module_loc_conf(r, ngx_http_core_module);
+ 
+@@ -3010,6 +3049,18 @@ ngx_http_test_reading(ngx_http_request_t *r)
          return;
      }
  
@@ -481,8 +457,8 @@ index 642b53cf..430c3026 100644
 +
  #endif
  
- #if (NGX_HTTP_V3)
-@@ -3688,6 +3739,12 @@ ngx_http_close_request(ngx_http_request_t *r, ngx_int_t rc)
+ #if (NGX_HAVE_KQUEUE)
+@@ -3685,6 +3736,12 @@ ngx_http_close_request(ngx_http_request_t *r, ngx_int_t rc)
          return;
      }
  #endif
@@ -493,10 +469,10 @@ index 642b53cf..430c3026 100644
 +    }
 +#endif
  
- #if (NGX_HTTP_V3)
-     if (r->qstream) {
+     ngx_http_free_request(r, rc);
+ 
 diff --git a/src/http/ngx_http_request.h b/src/http/ngx_http_request.h
-index a9351dd1..cf416797 100644
+index e44daa06..93e17daf 100644
 --- a/src/http/ngx_http_request.h
 +++ b/src/http/ngx_http_request.h
 @@ -434,6 +434,9 @@ struct ngx_http_request_s {
@@ -510,10 +486,10 @@ index a9351dd1..cf416797 100644
      size_t                            limit_rate;
      size_t                            limit_rate_after;
 diff --git a/src/http/ngx_http_request_body.c b/src/http/ngx_http_request_body.c
-index 2f851441..c0f23a9d 100644
+index 2f851441..866c245c 100644
 --- a/src/http/ngx_http_request_body.c
 +++ b/src/http/ngx_http_request_body.c
-@@ -84,6 +84,12 @@ ngx_http_read_client_request_body(ngx_http_request_t *r,
+@@ -91,6 +91,12 @@ ngx_http_read_client_request_body(ngx_http_request_t *r,
          goto done;
      }
  #endif
@@ -524,9 +500,9 @@ index 2f851441..c0f23a9d 100644
 +    }
 +#endif
  
- #if (NGX_HTTP_V3)
-     if (r->qstream) {
-@@ -543,6 +549,12 @@ ngx_http_discard_request_body(ngx_http_request_t *r)
+     preread = r->header_in->last - r->header_in->pos;
+ 
+@@ -550,6 +556,12 @@ ngx_http_discard_request_body(ngx_http_request_t *r)
          return NGX_OK;
      }
  #endif
@@ -537,8 +513,8 @@ index 2f851441..c0f23a9d 100644
 +    }
 +#endif
  
- #if (NGX_HTTP_V3)
-     if (r->qstream) {
+     if (ngx_http_test_expect(r) != NGX_OK) {
+         return NGX_HTTP_INTERNAL_SERVER_ERROR;
 diff --git a/src/http/ngx_http_spdy.c b/src/http/ngx_http_spdy.c
 new file mode 100644
 index 00000000..f66ee3b4
@@ -6203,10 +6179,10 @@ index 00000000..5242322b
 +
 +#endif /* _NGX_HTTP_SPDY_MODULE_H_INCLUDED_ */
 diff --git a/src/http/ngx_http_upstream.c b/src/http/ngx_http_upstream.c
-index 05213392..3959ff09 100644
+index 05213392..e02f8245 100644
 --- a/src/http/ngx_http_upstream.c
 +++ b/src/http/ngx_http_upstream.c
-@@ -525,6 +525,12 @@ ngx_http_upstream_init(ngx_http_request_t *r)
+@@ -532,6 +532,12 @@ ngx_http_upstream_init(ngx_http_request_t *r)
          return;
      }
  #endif
@@ -6217,9 +6193,9 @@ index 05213392..3959ff09 100644
 +    }
 +#endif
  
- #if (NGX_HTTP_V3)
-     if (r->qstream) {
-@@ -1354,6 +1360,11 @@ ngx_http_upstream_check_broken_connection(ngx_http_request_t *r,
+     if (c->read->timer_set) {
+         ngx_del_timer(c->read);
+@@ -1360,6 +1366,11 @@ ngx_http_upstream_check_broken_connection(ngx_http_request_t *r,
          return;
      }
  #endif
@@ -6229,23 +6205,22 @@ index 05213392..3959ff09 100644
 +    }
 +#endif
  
- #if (NGX_HTTP_V3)
-     if (r->qstream) {
+ #if (NGX_HAVE_KQUEUE)
+ 
 diff --git a/src/http/v2/ngx_http_v2_module.c b/src/http/v2/ngx_http_v2_module.c
-index c54dc103..66ad9cc8 100644
+index c54dc103..3be6bfac 100644
 --- a/src/http/v2/ngx_http_v2_module.c
 +++ b/src/http/v2/ngx_http_v2_module.c
-@@ -36,8 +36,7 @@ static char *ngx_http_v2_preread_size(ngx_conf_t *cf, void *post, void *data);
+@@ -36,8 +36,6 @@ static char *ngx_http_v2_preread_size(ngx_conf_t *cf, void *post, void *data);
  static char *ngx_http_v2_streams_index_mask(ngx_conf_t *cf, void *post,
      void *data);
  static char *ngx_http_v2_chunk_size(ngx_conf_t *cf, void *post, void *data);
 -static char *ngx_http_v2_spdy_deprecated(ngx_conf_t *cf, ngx_command_t *cmd,
 -    void *conf);
-+
  
  
  static ngx_conf_post_t  ngx_http_v2_recv_buffer_size_post =
-@@ -152,62 +151,6 @@ static ngx_command_t  ngx_http_v2_commands[] = {
+@@ -152,62 +150,6 @@ static ngx_command_t  ngx_http_v2_commands[] = {
        0,
        NULL },
  
@@ -6308,10 +6283,11 @@ index c54dc103..66ad9cc8 100644
        ngx_null_command
  };
  
-@@ -598,13 +541,3 @@ ngx_http_v2_chunk_size(ngx_conf_t *cf, void *post, void *data)
+@@ -597,14 +539,3 @@ ngx_http_v2_chunk_size(ngx_conf_t *cf, void *post, void *data)
+ 
      return NGX_CONF_OK;
  }
- 
+-
 -
 -static char *
 -ngx_http_v2_spdy_deprecated(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
