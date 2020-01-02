@@ -108,7 +108,11 @@ RUN cd /tmp \
     && make install \
 #endif
     && strip /usr/local/nginx/sbin/* \
+#if defined(ARCH_AMD64)
     && PKG_UNINSTALL(APP_BUILD_TOOLS APP_BUILD_TOOLS_UNSTABLE) \
+#else
+    && PKG_UNINSTALL(APP_BUILD_TOOLS) \
+#endif
     && cd / && rm -rf /tmp/* \
     && ln -sf /usr/local/nginx/sbin/nginx /usr/sbin/nginx
 #EXPOSE 80 443
