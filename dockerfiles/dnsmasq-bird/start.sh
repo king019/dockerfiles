@@ -1,3 +1,3 @@
 #!/bin/sh
 /usr/sbin/bird -f &
-/usr/local/sbin/dnsmasq -d $@
+/usr/sbin/dnsmasq -d $@

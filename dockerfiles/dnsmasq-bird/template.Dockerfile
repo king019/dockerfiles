@@ -1,11 +1,11 @@
 #include "common.Dockerfile"
-#include "image/debian_buster.Dockerfile"
+#include "image/debian_sid.Dockerfile"
 #include "env.Dockerfile"
 
-#define APP_DEPS tini libncurses6 libncursesw6 libreadline7
+#define APP_DEPS tini dnsmasq libncurses6 libncursesw6 libreadline8
 #define APP_BUILD_TOOLS build-essential bison flex libncurses-dev libreadline-dev LINUX_HEADERS wget patch binutils
 
-ENV BIRD_VERSION=2.0.7 DNSMASQ_VERSION=2.80
+ENV BIRD_VERSION=2.0.7
 ADD start.sh /start.sh
 RUN PKG_INSTALL(APP_DEPS APP_BUILD_TOOLS) \
     && chmod +x /start.sh \
@@ -18,11 +18,6 @@ RUN PKG_INSTALL(APP_DEPS APP_BUILD_TOOLS) \
           --localstatedir=/var \
        && make -j4 && make install \
        && strip /usr/sbin/bird* \
-    && cd /tmp \
-    && UNTARGZ(http://www.thekelleys.org.uk/dnsmasq/dnsmasq-${DNSMASQ_VERSION}.tar.xz) \
-       && cd /tmp/dnsmasq-${DNSMASQ_VERSION} \
-       && make -j4 && make install \
-       && strip /usr/local/sbin/* \
     && cd / \
     && rm -rf /tmp/* \
     && rm -rf /usr/share/man /usr/local/share/man \
