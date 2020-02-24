@@ -1,5 +1,5 @@
 #include "common.Dockerfile"
-#include "image/debian_buster.Dockerfile"
+#include "image/debian_sid.Dockerfile"
 #include "env.Dockerfile"
 
 #define APP_DEPS tini pdns-recursor pdns-tools pdns-backend-\* libncurses6 libncursesw6 libreadline7
