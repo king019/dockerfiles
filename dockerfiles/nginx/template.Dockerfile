@@ -31,8 +31,13 @@ RUN cd /tmp \
     && wget -q http://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz \
       && tar xf nginx-${NGINX_VERSION}.tar.gz \
       && cd /tmp/nginx-${NGINX_VERSION} \
+#if defined(ARCH_AMD64)
       && PATCH(https://github.com/kn007/patch/raw/master/nginx_with_quic.patch) \
       && PATCH_LOCAL(/tmp/nginx-spdy-patch-quic-aware.patch) \
+#else
+      && PATCH(https://github.com/kn007/patch/raw/master/nginx.patch) \
+      && PATCH_LOCAL(/tmp/nginx-spdy-patch.patch) \
+#endif
       && PATCH(https://github.com/hakasenyang/openssl-patch/raw/master/nginx_strict-sni_1.15.10.patch) \
       && PATCH(https://gist.github.com/CarterLi/f6e21d4749984a255edc7b358b44bf58/raw/4a7ad66a9a29ffade34d824549ed663bc4b5ac98/use_openssl_md5_sha1.diff) \
       && cd /tmp \
