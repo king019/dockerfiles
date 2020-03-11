@@ -32,7 +32,7 @@ RUN cd /tmp \
       && tar xf nginx-${NGINX_VERSION}.tar.gz \
       && cd /tmp/nginx-${NGINX_VERSION} \
       && PATCH(https://github.com/kn007/patch/raw/master/nginx_with_quic.patch) \
-      && PATCH_LOCAL(/tmp/patches/nginx-spdy-patch-quic-aware.patch) \
+      && PATCH_LOCAL(/tmp/nginx-spdy-patch-quic-aware.patch) \
       && PATCH(https://github.com/hakasenyang/openssl-patch/raw/master/nginx_strict-sni_1.15.10.patch) \
       && PATCH(https://gist.github.com/CarterLi/f6e21d4749984a255edc7b358b44bf58/raw/4a7ad66a9a29ffade34d824549ed663bc4b5ac98/use_openssl_md5_sha1.diff) \
       && cd /tmp \
