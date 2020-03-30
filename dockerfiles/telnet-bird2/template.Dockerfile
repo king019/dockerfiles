@@ -18,7 +18,7 @@ RUN PKG_INSTALL(APP_DEPS APP_BUILD_TOOLS) \
        && make -j4 && make install \
        && strip /usr/sbin/bird* \
     && cd / \
-    && chmod +x /usr/sbin/bird-restricted.sh \
+    && chmod +x /usr/local/sbin/bird-restricted.sh \
     && PKG_UNINSTALL(APP_BUILD_TOOLS) \
     && FINAL_CLEANUP()
 
