@@ -17,9 +17,9 @@ RUN PKG_INSTALL(APP_DEPS APP_BUILD_TOOLS) \
        && make -j4 && make install \
        && strip /usr/sbin/bird* \
     && cd / \
-    && rm -rf /tmp/* \
-    && rm -rf /usr/share/man /usr/local/share/man \
-    && PKG_UNINSTALL(APP_BUILD_TOOLS)
+    && PKG_UNINSTALL(APP_BUILD_TOOLS) \
+    && FINAL_CLEANUP()
+
 ADD bird.conf /etc/bird.conf
 ADD healthcheck.sh /
 HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 CMD [ "sh", "/healthcheck.sh" ]
