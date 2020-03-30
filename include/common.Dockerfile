@@ -4,7 +4,7 @@
 #define UNTARGZ(url) WGET(url) -O download.tar.gz \
     && tar xf download.tar.gz && rm download.tar.gz
 #define EMPTY(folder) find folder -mindepth 1 -delete
-#define FINAL_CLEANUP() echo "Removing unnecessary files" \
+#define FINAL_CLEANUP() PKG_CLEANUP() \
     && EMPTY(/root) \
     && EMPTY(/tmp) \
     && EMPTY(/usr/share/doc) \
