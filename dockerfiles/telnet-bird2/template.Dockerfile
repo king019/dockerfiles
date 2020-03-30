@@ -5,7 +5,7 @@
 #define APP_DEPS busybox-static libncurses6 libncursesw6 libreadline8
 #define APP_BUILD_TOOLS build-essential bison flex libncurses-dev libreadline-dev LINUX_HEADERS wget patch binutils
 
-ADD bird-restricted.sh /usr/sbin/
+ADD bird-restricted.sh /usr/local/sbin/
 ENV BIRD_VERSION=2.0.7
 RUN PKG_INSTALL(APP_DEPS APP_BUILD_TOOLS) \
     && cd /tmp \
@@ -22,4 +22,4 @@ RUN PKG_INSTALL(APP_DEPS APP_BUILD_TOOLS) \
     && FINAL_CLEANUP()
 
 STOPSIGNAL SIGKILL
-ENTRYPOINT ["/bin/busybox", "telnetd", "-l", "/usr/sbin/bird-restricted.sh", "-K", "-F"]
+ENTRYPOINT ["/bin/busybox", "telnetd", "-l", "/usr/local/sbin/bird-restricted.sh", "-K", "-F"]
