@@ -15,7 +15,7 @@
 #define APP_BUILD_TOOLS binutils build-essential git autoconf automake libtool wget libgd-dev libpcre3-dev zlib1g-dev libzstd-dev unzip patch LINUX_HEADERS
 #endif
 
-ENV NGINX_VERSION=1.17.9 OPENSSL_VERSION=1.1.1e QUICHE_VERSION=2f2dfab
+ENV NGINX_VERSION=1.17.9 OPENSSL_VERSION=1.1.1f QUICHE_VERSION=2f2dfab
 COPY patches /tmp/
 RUN cd /tmp \
     && PKG_INSTALL(APP_DEPS APP_BUILD_TOOLS) \
